@@ -1,103 +1,208 @@
-import Image from "next/image";
+"use client";
+import {
+  getMostReleventSearchTickerSymbol,
+  SearchTickerSymbolItemDto,
+} from "@/services/fmp";
+import { createResponse } from "@/services/gpt";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  Button,
+  HeroUIProvider,
+  Textarea,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/react";
+import { useMemo, useState } from "react";
+
+////////////////////////////////////////////////////////////////////////////////
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedRegions, setSelectedRegions] = useState(new Set(["china"]));
+  const regionKeyValues = {
+    us: "The United States",
+    hk: "Hong Kong",
+    china: "China",
+    global: "Global",
+  };
+  const selectedValue = useMemo(
+    () =>
+      regionKeyValues[
+        Array.from(selectedRegions)[0] as keyof typeof regionKeyValues
+      ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedRegions],
+  );
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  //////////////////////////////////////////////////////////////////////////////
+
+  const [selectedLang, setSelectedLang] = useState(new Set(["sc"]));
+  const langKeyValues = {
+    en: "English",
+    sc: "中文",
+    tc: "繁體",
+  };
+  const selectedLangValue = useMemo(
+    () =>
+      langKeyValues[Array.from(selectedLang)[0] as keyof typeof langKeyValues],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [selectedLang],
+  );
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  const [userInsight, setUserInsight] = useState("");
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  const [resultJson, setResultJson] = useState<SearchTickerSymbolItemDto[]>([]);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const onClickSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const response = await createResponse({
+        model: "gpt-4o-mini",
+        selectedLang: selectedLangValue,
+        input: userInsight,
+      });
+      const tickerSymbols = (
+        await Promise.allSettled(
+          response.map((r) =>
+            getMostReleventSearchTickerSymbol(
+              r.company,
+              Array.from(selectedRegions)[0],
+            ),
+          ),
+        )
+      )
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value)
+        .filter((r) => r !== null);
+      // console.log(tickerSymbols);
+      if (tickerSymbols.length) {
+        setResultJson(tickerSymbols);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  return (
+    <HeroUIProvider>
+      <div className="bg-gradient-to-r from-blue-700 to-[#B06AB3] px-6 py-12">
+        <div className="container mx-auto flex flex-col justify-center items-center text-center">
+          <h2 className="text-white sm:text-4xl text-3xl font-bold mb-6">
+            Ticker Discovery 🔬
+          </h2>
+          <p className="text-white text-base text-center mb-12">
+            Give me what you thought about the market and I will give you the
+            ticker symbols base on where you are interested in.
+          </p>
         </div>
+      </div>
+      <main className="text-foreground bg-background content-center flex flex-col">
+        <div className="p-3 flex flex-row gap-4 mb-4 w-full">
+          <div className="mx-auto font-[sans-serif] w-full">
+            <label className="mb-2 text-sm text-black">
+              Applied language:{" "}
+            </label>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button className="capitalize" variant="bordered">
+                  {selectedLangValue}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Language selection"
+                closeOnSelect={false}
+                selectedKeys={selectedLang}
+                selectionMode="multiple"
+                variant="flat"
+                onSelectionChange={(keys) =>
+                  setSelectedLang(new Set([keys.anchorKey as string]))
+                }
+              >
+                {Object.entries(langKeyValues).map(([key, value]) => (
+                  <DropdownItem key={key}>{value}</DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+          <div className="mx-auto font-[sans-serif] w-full">
+            <label className="mb-2 text-sm text-black">
+              Desired market region:{" "}
+            </label>
+            <Dropdown>
+              <DropdownTrigger>
+                <Button className="capitalize" variant="bordered">
+                  {selectedValue}
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Regions selection"
+                closeOnSelect={false}
+                selectedKeys={selectedRegions}
+                selectionMode="multiple"
+                variant="flat"
+                onSelectionChange={(keys) =>
+                  setSelectedRegions(new Set([keys.anchorKey as string]))
+                }
+              >
+                {Object.entries(regionKeyValues).map(([key, value]) => (
+                  <DropdownItem key={key}>{value}</DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        </div>
+        <div className="mt-2">
+          <Textarea
+            className="max-w-xs block"
+            label="User insight"
+            placeholder="What comes into your mind?"
+            onChange={(e) => setUserInsight(e.target.value)}
+          />
+        </div>
+        <button
+          className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold"
+          onClick={onClickSubmit}
+          disabled={!userInsight || isLoading}
+        >
+          {isLoading ? "Searching..." : "Search ticker symbols"}
+        </button>
+        {resultJson.length !== 0 && (
+        <div className="mt-2">
+          <Table aria-label="Example static collection table">
+            <TableHeader>
+              <TableColumn>Ticker symbol</TableColumn>
+              <TableColumn>Applied Exchange</TableColumn>
+            </TableHeader>
+            <TableBody>
+              {resultJson.map((item) => (
+                <TableRow key={item.symbol}>
+                  <TableCell>{item.symbol}</TableCell>
+                  <TableCell>{item.exchangeShortName}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center"></footer>
+    </HeroUIProvider>
   );
 }
