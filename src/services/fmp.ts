@@ -7,7 +7,7 @@ const fetcher = axios.create({
 
 const regionKeyExs: Record<string, Set<string>> = {
   us: new Set(["NASDAQ", "NYSE"]),
-  hk: new Set(["HKEX"]),
+  hk: new Set(["HKEX", "HKSE"]),
   china: new Set(["SSE", "SZSE"]),
   global: new Set(["NASDAQ", "NYSE", "HKEX", "SSE", "SZSE"]),
 };

@@ -11,26 +11,25 @@
     "format:fix": "prettier --write --ignore-path .gitignore ."
   },
   "dependencies": {
-    "@heroui/dropdown": "^2.3.16",
-    "@heroui/react": "^2.7.6-beta.2",
     "@nextui-org/react": "^2.6.11",
     "axios": "^1.8.3",
     "framer-motion": "^12.5.0",
     "next": "15.2.2",
     "openai": "^4.87.3",
+    "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.0.14",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.2.2",
     "prettier": "^3.5.3",
-    "tailwindcss": "^4",
+    "tailwindcss": "3.4.1",
     "typescript": "^5"
   }
 }

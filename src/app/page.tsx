@@ -5,12 +5,7 @@ import {
 } from "@/services/fmp";
 import { createResponse } from "@/services/gpt";
 import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  Button,
-  HeroUIProvider,
+  NextUIProvider,
   Textarea,
   Table,
   TableHeader,
@@ -18,8 +13,16 @@ import {
   TableBody,
   TableRow,
   TableCell,
-} from "@heroui/react";
+  Spinner,
+} from "@nextui-org/react";
 import { useMemo, useState } from "react";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@nextui-org/dropdown";
+import { Button } from "@nextui-org/button";
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -61,7 +64,9 @@ export default function Home() {
 
   //////////////////////////////////////////////////////////////////////////////
 
-  const [resultJson, setResultJson] = useState<SearchTickerSymbolItemDto[]>([]);
+  const [resultJson, setResultJson] = useState<
+    SearchTickerSymbolItemDto[] | null
+  >([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const onClickSubmit = async () => {
@@ -88,6 +93,8 @@ export default function Home() {
       // console.log(tickerSymbols);
       if (tickerSymbols.length) {
         setResultJson(tickerSymbols);
+      } else {
+        setResultJson(null);
       }
     } catch (error) {
       console.error(error);
@@ -99,7 +106,7 @@ export default function Home() {
   //////////////////////////////////////////////////////////////////////////////
 
   return (
-    <HeroUIProvider>
+    <NextUIProvider>
       <div className="bg-gradient-to-r from-blue-700 to-[#B06AB3] px-6 py-12">
         <div className="container mx-auto flex flex-col justify-center items-center text-center">
           <h2 className="text-white sm:text-4xl text-3xl font-bold mb-6">
@@ -111,12 +118,10 @@ export default function Home() {
           </p>
         </div>
       </div>
-      <main className="text-foreground bg-background content-center flex flex-col">
-        <div className="p-3 flex flex-row gap-4 mb-4 w-full">
-          <div className="mx-auto font-[sans-serif] w-full">
-            <label className="mb-2 text-sm text-black">
-              Applied language:{" "}
-            </label>
+      <main className="flex flex-col pt-3 pl-80 pr-80 content-center">
+        <div className="flex flex-row gap-4 mb-4 w-full">
+          <div className="w-full">
+            <label className="mb-2 text-medium">Applied language: </label>
             <Dropdown>
               <DropdownTrigger>
                 <Button className="capitalize" variant="bordered">
@@ -126,24 +131,24 @@ export default function Home() {
               <DropdownMenu
                 disallowEmptySelection
                 aria-label="Language selection"
-                closeOnSelect={false}
+                closeOnSelect={true}
                 selectedKeys={selectedLang}
-                selectionMode="multiple"
+                selectionMode="single"
                 variant="flat"
                 onSelectionChange={(keys) =>
                   setSelectedLang(new Set([keys.anchorKey as string]))
                 }
               >
                 {Object.entries(langKeyValues).map(([key, value]) => (
-                  <DropdownItem key={key}>{value}</DropdownItem>
+                  <DropdownItem key={key} className="text-center">
+                    {value}
+                  </DropdownItem>
                 ))}
               </DropdownMenu>
             </Dropdown>
           </div>
-          <div className="mx-auto font-[sans-serif] w-full">
-            <label className="mb-2 text-sm text-black">
-              Desired market region:{" "}
-            </label>
+          <div className="w-full">
+            <label className="mb-2 text-medium">Desired market region: </label>
             <Dropdown>
               <DropdownTrigger>
                 <Button className="capitalize" variant="bordered">
@@ -153,56 +158,67 @@ export default function Home() {
               <DropdownMenu
                 disallowEmptySelection
                 aria-label="Regions selection"
-                closeOnSelect={false}
+                closeOnSelect={true}
                 selectedKeys={selectedRegions}
-                selectionMode="multiple"
+                selectionMode="single"
                 variant="flat"
                 onSelectionChange={(keys) =>
                   setSelectedRegions(new Set([keys.anchorKey as string]))
                 }
               >
                 {Object.entries(regionKeyValues).map(([key, value]) => (
-                  <DropdownItem key={key}>{value}</DropdownItem>
+                  <DropdownItem key={key} className="text-center">
+                    {value}
+                  </DropdownItem>
                 ))}
               </DropdownMenu>
             </Dropdown>
           </div>
         </div>
-        <div className="mt-2">
+        <div className="w-full mb-4">
           <Textarea
-            className="max-w-xs block"
-            label="User insight"
-            placeholder="What comes into your mind?"
+            label="Insight"
+            placeholder="What's on your mind?"
             onChange={(e) => setUserInsight(e.target.value)}
           />
         </div>
-        <button
-          className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold"
-          onClick={onClickSubmit}
+        <Button
+          className="bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg mb-2"
+          radius="sm"
+          onPress={onClickSubmit}
           disabled={!userInsight || isLoading}
         >
-          {isLoading ? "Searching..." : "Search ticker symbols"}
-        </button>
-        {resultJson.length !== 0 && (
-        <div className="mt-2">
-          <Table aria-label="Example static collection table">
-            <TableHeader>
-              <TableColumn>Ticker symbol</TableColumn>
-              <TableColumn>Applied Exchange</TableColumn>
-            </TableHeader>
-            <TableBody>
-              {resultJson.map((item) => (
-                <TableRow key={item.symbol}>
-                  <TableCell>{item.symbol}</TableCell>
-                  <TableCell>{item.exchangeShortName}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+          {isLoading ? (
+            <Spinner size="md" color="secondary" />
+          ) : (
+            "Search ticker symbols"
+          )}
+        </Button>
+        {resultJson === null && (
+          <div className="text-red-500 text-center">
+            No ticker symbols found.
+          </div>
+        )}
+        {resultJson !== null && resultJson.length !== 0 && (
+          <div>
+            <Table aria-label="Example static collection table">
+              <TableHeader>
+                <TableColumn>Ticker symbol</TableColumn>
+                <TableColumn>Applied Exchange</TableColumn>
+              </TableHeader>
+              <TableBody>
+                {resultJson.map((item) => (
+                  <TableRow key={item.symbol}>
+                    <TableCell>{item.symbol}</TableCell>
+                    <TableCell>{item.exchangeShortName}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </main>
       <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center"></footer>
-    </HeroUIProvider>
+    </NextUIProvider>
   );
 }
