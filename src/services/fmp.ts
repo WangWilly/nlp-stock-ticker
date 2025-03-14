@@ -15,7 +15,16 @@ const regionKeyExs: Record<string, Set<string>> = {
   us: new Set(["NASDAQ", "NYSE"]),
   hk: new Set(["HKEX", "HKSE"]),
   china: new Set(["SHH", "SSE", "SHZ", "SZSE"]),
-  global: new Set(["NASDAQ", "NYSE", "HKEX", "HKSE", "SHH", "SSE", "SHZ", "SZSE"]),
+  global: new Set([
+    "NASDAQ",
+    "NYSE",
+    "HKEX",
+    "HKSE",
+    "SHH",
+    "SSE",
+    "SHZ",
+    "SZSE",
+  ]),
 };
 
 export interface SearchTickerSymbolItemDto {
@@ -85,7 +94,11 @@ export async function getTickerSymbolByCompanyNameOrPartialSymbol(
     return ticker;
   }
 
-  const ticker2 = await getMostReleventSearchTickerSymbol(ctx, partialTicker, region);
+  const ticker2 = await getMostReleventSearchTickerSymbol(
+    ctx,
+    partialTicker,
+    region,
+  );
   if (ticker2) {
     logger.info({ ctx, ticker: ticker2 }, "found ticker by partial symbol");
     return ticker2;

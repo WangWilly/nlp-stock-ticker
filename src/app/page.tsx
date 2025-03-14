@@ -135,12 +135,12 @@ export default function Home() {
             Ticker Discovery 🔬
           </h2>
           <p className="text-white text-base text-center mb-12">
-            Give me what you thinking about the market. The agent will give you the
-            ticker symbols based on where you are interested in.
+            Give me what you thinking about the market. The agent will give you
+            the ticker symbols based on where you are interested in.
           </p>
         </div>
       </div>
-      <main className="flex flex-col pt-3 pl-80 pr-80 content-center">
+      <main className="flex flex-col pt-3 pl-60 pr-60 content-center">
         <div className="flex flex-row gap-4 mb-4 w-full">
           <div className="w-full">
             <label className="mb-2 text-medium">Applied language: </label>
