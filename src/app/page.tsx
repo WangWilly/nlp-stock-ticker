@@ -1,9 +1,15 @@
 "use client";
+
 import {
   getMostReleventSearchTickerSymbol,
   SearchTickerSymbolItemDto,
 } from "@/services/fmp";
 import { createResponse } from "@/services/gpt";
+import { ContextDto } from "@/core/contextdto";
+
+import { v4 } from "uuid";
+import pino from "pino";
+
 import {
   NextUIProvider,
   Textarea,
@@ -23,6 +29,7 @@ import {
   DropdownItem,
 } from "@nextui-org/dropdown";
 import { Button } from "@nextui-org/button";
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -70,17 +77,28 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(false);
   const onClickSubmit = async () => {
+    const userCtx: ContextDto = {
+      uuid: v4(),
+    };
+    const logger = pino({ name: "onClickSubmit" });
+    logger.info({ userCtx }, "new user");
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    logger.info({ userCtx, userInsight }, "submitting request");
     setIsLoading(true);
     try {
-      const response = await createResponse({
+      const response = await createResponse(userCtx, {
         model: "gpt-4o-mini",
         selectedLang: selectedLangValue,
         input: userInsight,
       });
+      logger.debug({ userCtx, response }, "response from openai");
       const tickerSymbols = (
         await Promise.allSettled(
           response.map((r) =>
             getMostReleventSearchTickerSymbol(
+              userCtx,
               r.company,
               Array.from(selectedRegions)[0],
             ),
@@ -90,13 +108,15 @@ export default function Home() {
         .filter((r) => r.status === "fulfilled")
         .map((r) => r.value)
         .filter((r) => r !== null);
-      // console.log(tickerSymbols);
       if (tickerSymbols.length) {
+        logger.info({ userCtx, tickerSymbols }, "found ticker symbols");
         setResultJson(tickerSymbols);
       } else {
+        logger.warn({ userCtx }, "no ticker symbols found");
         setResultJson(null);
       }
     } catch (error) {
+      logger.error({ userCtx, error }, "error occurred");
       console.error(error);
     } finally {
       setIsLoading(false);
