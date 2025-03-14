@@ -21,7 +21,7 @@ import {
   TableCell,
   Spinner,
 } from "@nextui-org/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dropdown,
   DropdownTrigger,
@@ -87,11 +87,12 @@ export default function Home() {
     logger.info({ userCtx, userInsight }, "submitting request");
     setIsLoading(true);
     try {
-      const response = await createResponse(userCtx, {
-        model: "gpt-4o-mini",
-        selectedLang: selectedLangValue,
-        input: userInsight,
-      });
+      const response = await createResponse(
+        userCtx,
+        "gpt-4o-mini",
+        selectedLangValue,
+        userInsight,
+      );
       logger.debug({ userCtx, response }, "response from openai");
 
       const tickerSymbols = (
@@ -124,6 +125,30 @@ export default function Home() {
       setIsLoading(false);
     }
   };
+
+  //////////////////////////////////////////////////////////////////////////////
+
+  const ctrlPlusEnterToSubmit = (
+    e: KeyboardEvent,
+    _userInsight: string,
+    _isLoading: boolean,
+  ) => {
+    if (!_userInsight.length || _isLoading) {
+      return;
+    }
+    if (e.key === "Enter" && e.ctrlKey) {
+      onClickSubmit();
+    }
+  };
+  useEffect(() => {
+    const event = (e: KeyboardEvent) =>
+      ctrlPlusEnterToSubmit(e, userInsight, isLoading);
+    document.addEventListener("keydown", event);
+    return () => {
+      document.removeEventListener("keydown", event);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userInsight, isLoading]);
 
   //////////////////////////////////////////////////////////////////////////////
 
@@ -204,11 +229,14 @@ export default function Home() {
             onChange={(e) => setUserInsight(e.target.value)}
           />
         </div>
+        <text className="text-right text-sm font-mono">
+          Press [Ctrl+Enter] to submit
+        </text>
         <Button
           className="bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg mb-2"
           radius="sm"
           onPress={onClickSubmit}
-          isDisabled={!userInsight || isLoading}
+          isDisabled={!userInsight.length || isLoading}
         >
           {isLoading ? (
             <Spinner size="md" color="secondary" />
