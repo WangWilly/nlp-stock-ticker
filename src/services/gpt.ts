@@ -24,7 +24,7 @@ export async function createResponse(
   ctx: ContextDto,
   model: string,
   selectedLang: string,
-  input: string
+  input: string,
 ): Promise<TickerDto[]> {
   const logger = pino({ name: "createResponse" });
   logger.info({ ctx, model, selectedLang, input }, "received request");

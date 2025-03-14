@@ -47,3 +47,4 @@ Query Location                         Expected         Output
 - https://vercel.com
 - https://github.com/openai/openai-node
 - https://platform.openai.com/docs/api-reference/authentication
+- https://readymadeui.com/
