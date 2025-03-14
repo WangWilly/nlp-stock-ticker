@@ -14,8 +14,8 @@ const fetcher = axios.create({
 const regionKeyExs: Record<string, Set<string>> = {
   us: new Set(["NASDAQ", "NYSE"]),
   hk: new Set(["HKEX", "HKSE"]),
-  china: new Set(["SSE", "SZSE"]),
-  global: new Set(["NASDAQ", "NYSE", "HKEX", "SSE", "SZSE"]),
+  china: new Set(["SHH", "SSE", "SHZ", "SZSE"]),
+  global: new Set(["NASDAQ", "NYSE", "HKEX", "HKSE", "SHH", "SSE", "SHZ", "SZSE"]),
 };
 
 export interface SearchTickerSymbolItemDto {
@@ -32,7 +32,7 @@ interface SearchTickerSymbolResponseDto {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-export async function getMostReleventSearchTickerSymbol(
+async function getMostReleventSearchTickerSymbol(
   ctx: ContextDto,
   query: string,
   region: string,
@@ -68,4 +68,29 @@ export async function getMostReleventSearchTickerSymbol(
     logger.error({ ctx, err }, "error occurred");
     return null;
   }
+}
+
+export async function getTickerSymbolByCompanyNameOrPartialSymbol(
+  ctx: ContextDto,
+  company: string,
+  partialTicker: string,
+  region: string,
+): Promise<SearchTickerSymbolItemDto | null> {
+  const logger = pino({ name: "getTickerSymbolByCompanyNameOrPartialSymbol" });
+  logger.info({ ctx, company, partialTicker, region }, "received request");
+
+  const ticker = await getMostReleventSearchTickerSymbol(ctx, company, region);
+  if (ticker) {
+    logger.info({ ctx, ticker }, "found ticker by company name");
+    return ticker;
+  }
+
+  const ticker2 = await getMostReleventSearchTickerSymbol(ctx, partialTicker, region);
+  if (ticker2) {
+    logger.info({ ctx, ticker: ticker2 }, "found ticker by partial symbol");
+    return ticker2;
+  }
+
+  logger.warn({ ctx }, "no ticker found");
+  return null;
 }

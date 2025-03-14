@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  getMostReleventSearchTickerSymbol,
+  getTickerSymbolByCompanyNameOrPartialSymbol,
   SearchTickerSymbolItemDto,
 } from "@/services/fmp";
 import { createResponse } from "@/services/gpt";
@@ -30,7 +30,6 @@ import {
 } from "@nextui-org/dropdown";
 import { Button } from "@nextui-org/button";
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 export default function Home() {
@@ -55,8 +54,8 @@ export default function Home() {
   const [selectedLang, setSelectedLang] = useState(new Set(["sc"]));
   const langKeyValues = {
     en: "English",
-    sc: "中文",
-    tc: "繁體",
+    sc: "简体中文",
+    tc: "繁體中文",
   };
   const selectedLangValue = useMemo(
     () =>
@@ -94,12 +93,14 @@ export default function Home() {
         input: userInsight,
       });
       logger.debug({ userCtx, response }, "response from openai");
+
       const tickerSymbols = (
         await Promise.allSettled(
           response.map((r) =>
-            getMostReleventSearchTickerSymbol(
+            getTickerSymbolByCompanyNameOrPartialSymbol(
               userCtx,
               r.company,
+              r.ticker,
               Array.from(selectedRegions)[0],
             ),
           ),
@@ -108,6 +109,7 @@ export default function Home() {
         .filter((r) => r.status === "fulfilled")
         .map((r) => r.value)
         .filter((r) => r !== null);
+
       if (tickerSymbols.length) {
         logger.info({ userCtx, tickerSymbols }, "found ticker symbols");
         setResultJson(tickerSymbols);
@@ -117,7 +119,7 @@ export default function Home() {
       }
     } catch (error) {
       logger.error({ userCtx, error }, "error occurred");
-      console.error(error);
+      setResultJson(null);
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +135,7 @@ export default function Home() {
             Ticker Discovery 🔬
           </h2>
           <p className="text-white text-base text-center mb-12">
-            Give me what you thought about the market and I will give you the
+            Give me what you thinking about the market and I will give you the
             ticker symbols base on where you are interested in.
           </p>
         </div>
@@ -224,13 +226,15 @@ export default function Home() {
             <Table aria-label="Example static collection table">
               <TableHeader>
                 <TableColumn>Ticker symbol</TableColumn>
-                <TableColumn>Applied Exchange</TableColumn>
+                <TableColumn>Exchange code</TableColumn>
+                <TableColumn>Exchange full name</TableColumn>
               </TableHeader>
               <TableBody>
                 {resultJson.map((item) => (
                   <TableRow key={item.symbol}>
                     <TableCell>{item.symbol}</TableCell>
                     <TableCell>{item.exchangeShortName}</TableCell>
+                    <TableCell>{item.stockExchange}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
