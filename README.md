@@ -25,3 +25,25 @@ This is a project to discover stock tickers from a given text. NextJS is used fo
 3. Fill in the environment variables
 4. Set the root directory to `./`
 5. Deploy
+
+## Tested on these sample texts
+
+```txt
+Query Location                         Expected         Output
+"Find me Apple stock price"            US               AAPL
+"港股阿里巴巴上升趨勢"                    HK               9988.HK
+"Thoughts on HSBC"                     US               HSBC
+"Thoughts on HSBC"                     HK               0005.HK
+"compare BABA and NVDA"                Global           BABA, NVDA
+"Microsft stock" (example of a typo)   US               MSFT
+"random text"                          Global           No tickers found
+"茅台股票" (Moutai stock)               China            600519.SS
+```
+
+## References
+
+- https://site.financialmodelingprep.com/developer/docs/stable
+- https://nextjs.org/docs/app/getting-started/installation
+- https://vercel.com
+- https://github.com/openai/openai-node
+- https://platform.openai.com/docs/api-reference/authentication
