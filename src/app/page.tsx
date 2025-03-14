@@ -33,7 +33,7 @@ import { Button } from "@nextui-org/button";
 ////////////////////////////////////////////////////////////////////////////////
 
 export default function Home() {
-  const [selectedRegions, setSelectedRegions] = useState(new Set(["china"]));
+  const [selectedRegions, setSelectedRegions] = useState(new Set(["global"]));
   const regionKeyValues = {
     us: "The United States",
     hk: "Hong Kong",
@@ -135,8 +135,8 @@ export default function Home() {
             Ticker Discovery 🔬
           </h2>
           <p className="text-white text-base text-center mb-12">
-            Give me what you thinking about the market and I will give you the
-            ticker symbols base on where you are interested in.
+            Give me what you thinking about the market. The agent will give you the
+            ticker symbols based on where you are interested in.
           </p>
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function Home() {
           className="bg-gradient-to-tr from-pink-500 to-yellow-500 text-white shadow-lg mb-2"
           radius="sm"
           onPress={onClickSubmit}
-          disabled={!userInsight || isLoading}
+          isDisabled={!userInsight || isLoading}
         >
           {isLoading ? (
             <Spinner size="md" color="secondary" />
